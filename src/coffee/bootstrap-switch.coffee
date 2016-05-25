@@ -325,19 +325,32 @@ do ($ = window.jQuery, window) ->
       # set handles width
       $handles.width handleWidth
 
+
       # set label width
       @$label.width (index, width) =>
         return @options.labelWidth  if @options.labelWidth isnt "auto"
 
         if width < handleWidth then handleWidth else width
 
+      ### Updates to fix invalid widths causing UI problems when browser is zoomed
+      * Uses the bounding rectangle which contains the floating point values to maintain
+      * correct widths as they will under or overflow the boundaries when truncating to
+      * integers with jQuery width() and outerWidth().
+      ###
+
+      rect = if @$label[0] then @$label[0].getBoundingClientRect() else undefined
+      #IE8 doesn't support width so it must be calculated by subtracting the right and left edges of the element
+      labelWidthFloated = if rect then (if rect.width then rect.width else rect.right - (rect.left)) else undefined
+
       # get handle and label widths
       @_handleWidth = @$on.outerWidth()
       @_labelWidth = @$label.outerWidth()
+      @_labelWidth = if @$label.outerWidth() != labelWidthFloated then labelWidthFloated else @$label.outerWidth()
 
       # set container and wrapper widths
       @$container.width (@_handleWidth * 2) + @_labelWidth
       @$wrapper.width @_handleWidth + @_labelWidth
+
 
     _containerPosition: (state = @options.state, callback) ->
       @$container

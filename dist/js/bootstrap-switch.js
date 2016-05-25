@@ -421,7 +421,7 @@
       };
 
       BootstrapSwitch.prototype._width = function() {
-        var $handles, handleWidth;
+        var $handles, handleWidth, labelWidthFloated, rect;
         $handles = this.$on.add(this.$off);
         $handles.add(this.$label).css("width", "");
         handleWidth = this.options.handleWidth === "auto" ? Math.max(this.$on.width(), this.$off.width()) : this.options.handleWidth;
@@ -438,8 +438,17 @@
             }
           };
         })(this));
+
+        /* Updates to fix invalid widths causing UI problems when browser is zoomed
+        * Uses the bounding rectangle which contains the floating point values to maintain
+        * correct widths as they will under or overflow the boundaries when truncating to
+        * integers with jQuery width() and outerWidth().
+         */
+        rect = this.$label[0] ? this.$label[0].getBoundingClientRect() : void 0;
+        labelWidthFloated = rect ? (rect.width ? rect.width : rect.right - rect.left) : void 0;
         this._handleWidth = this.$on.outerWidth();
         this._labelWidth = this.$label.outerWidth();
+        this._labelWidth = this.$label.outerWidth() !== labelWidthFloated ? labelWidthFloated : this.$label.outerWidth();
         this.$container.width((this._handleWidth * 2) + this._labelWidth);
         return this.$wrapper.width(this._handleWidth + this._labelWidth);
       };
